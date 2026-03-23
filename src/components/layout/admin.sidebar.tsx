@@ -36,6 +36,11 @@ const AdminSideBar = () => {
                     icon: <TeamOutlined />,
                 },
                 {
+                    key: "about",
+                    label: <Link href={"/admin/pages"}>Quản lý Giới thiệu</Link>,
+                    icon: <AppstoreOutlined />,
+                },
+                {
                     key: 'sub1',
                     label: 'Navigation One',
                     icon: <MailOutlined />,

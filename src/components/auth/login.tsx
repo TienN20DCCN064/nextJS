@@ -34,8 +34,8 @@ const Login = () => {
             })
 
         } else {
-            //redirect to /dashboard
-            router.push('/dashboard');
+            //redirect to /admin
+            router.push('/admin');
         }
     };
 
