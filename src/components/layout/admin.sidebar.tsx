@@ -4,7 +4,6 @@ import Menu from "antd/es/menu";
 import {
     AppstoreOutlined,
     MailOutlined,
-    SettingOutlined,
     TeamOutlined,
 
 } from '@ant-design/icons';
@@ -17,12 +16,10 @@ type MenuItem = Required<MenuProps>['items'][number];
 const AdminSideBar = () => {
     const { Sider } = Layout;
     const { collapseMenu } = useContext(AdminContext)!;
-
     const items: MenuItem[] = [
-
         {
             key: 'grp',
-            label: 'Hỏi Dân IT',
+            label: 'Quản trị',
             type: 'group',
             children: [
                 {
@@ -32,74 +29,42 @@ const AdminSideBar = () => {
                 },
                 {
                     key: "users",
-                    label: <Link href={"/dashboard/user"}>Manage Users</Link>,
+                    label: <Link href={"/dashboard/user"}>Quản lý người dùng</Link>,
                     icon: <TeamOutlined />,
                 },
                 {
                     key: "about",
-                    label: <Link href={"/admin/pages"}>Quản lý Giới thiệu</Link>,
+                    label: <Link href={"/admin/about"}>Quản lý Giới thiệu</Link>,
                     icon: <AppstoreOutlined />,
                 },
                 {
-                    key: 'sub1',
-                    label: 'Navigation One',
+                    key: "news",
+                    label: <Link href={"/admin/news"}>Quản lý Tin tức</Link>,
+                    icon: <AppstoreOutlined />,
+                },
+                {
+                    key: "announcements",
+                    label: <Link href={"/admin/announcements"}>Quản lý Thông báo</Link>,
+                    icon: <AppstoreOutlined />,
+                },
+                {
+                    key: "documents",
+                    label: <Link href={"/admin/documents"}>Quản lý Văn bản</Link>,
+                    icon: <AppstoreOutlined />,
+                },
+                {
+                    key: "procedures",
+                    label: <Link href={"/admin/procedures"}>Quản lý Thủ tục</Link>,
+                    icon: <AppstoreOutlined />,
+                },
+                {
+                    key: "contact",
+                    label: <Link href={"/admin/contact"}>Quản lý Liên hệ</Link>,
                     icon: <MailOutlined />,
-                    children: [
-                        {
-                            key: 'g1',
-                            label: 'Item 1',
-                            type: 'group',
-                            children: [
-                                { key: '1', label: 'Option 1' },
-                                { key: '2', label: 'Option 2' },
-                            ],
-                        },
-                        {
-                            key: 'g2',
-                            label: 'Item 2',
-                            type: 'group',
-                            children: [
-                                { key: '3', label: 'Option 3' },
-                                { key: '4', label: 'Option 4' },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    key: 'sub2',
-                    label: 'Navigation Two',
-                    icon: <AppstoreOutlined />,
-                    children: [
-                        { key: '5', label: 'Option 5' },
-                        { key: '6', label: 'Option 6' },
-                        {
-                            key: 'sub3',
-                            label: 'Submenu',
-                            children: [
-                                { key: '7', label: 'Option 7' },
-                                { key: '8', label: 'Option 8' },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    type: 'divider',
-                },
-                {
-                    key: 'sub4',
-                    label: 'Navigation Three',
-                    icon: <SettingOutlined />,
-                    children: [
-                        { key: '9', label: 'Option 9' },
-                        { key: '10', label: 'Option 10' },
-                        { key: '11', label: 'Option 11' },
-                        { key: '12', label: 'Option 12' },
-                    ],
                 },
             ],
         },
     ];
-
     return (
         <Sider
             collapsed={collapseMenu}

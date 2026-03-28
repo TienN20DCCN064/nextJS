@@ -1,3 +1,7 @@
+/* Đảm bảo nội dung không bị che bởi TopBar và Navbar */
+#app-content-wrapper {
+  padding-top: 104px; /* 48px cho TopBar + 56px cho Navbar, chỉnh lại nếu chiều cao khác */
+}
 * {
   margin: 0;
   box-sizing: border-box;

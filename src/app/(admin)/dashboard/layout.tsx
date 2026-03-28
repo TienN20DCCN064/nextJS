@@ -11,7 +11,19 @@ const AdminLayout = async ({
     children: React.ReactNode;
 }>) => {
 
-    const session = await auth()
+
+    const session = await auth();
+    if (!session) {
+        if (typeof globalThis.window === 'object') {
+            globalThis.window.location.href = '/auth/login';
+        } else {
+            // For server components, use redirect from next/navigation
+            // eslint-disable-next-line @next/next/no-server-import-in-page
+            const { redirect } = await import('next/navigation');
+            redirect('/auth/login');
+        }
+        return null;
+    }
 
     return (
         <AdminContextProvider>
@@ -28,7 +40,7 @@ const AdminLayout = async ({
                 </div>
             </div>
         </AdminContextProvider>
-    )
+    );
 }
 
 export default AdminLayout
