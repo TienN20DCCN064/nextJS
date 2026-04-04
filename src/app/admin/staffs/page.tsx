@@ -4,12 +4,10 @@ import AdminFooter from '@/components/layout/admin.footer';
 import AdminHeader from '@/components/layout/admin.header';
 import AdminSideBar from '@/components/layout/admin.sidebar';
 import { AdminContextProvider } from '@/library/admin.context';
-import ManageContacts from '@/components/admin/manage.contacts';
+import ManageStaffs from '@/components/admin/manage.staffs';
 import { redirect } from 'next/navigation';
 
-// Bỏ hàm lấy dữ liệu cũ, dùng component CRUD
-
-const AdminContactPage = async () => {
+const AdminStaffsPage = async () => {
   const session = await auth();
   if (!session) {
     redirect('/auth/login');
@@ -26,7 +24,7 @@ const AdminContactPage = async () => {
         <div className='right-side' style={{ flex: 1 }}>
           <AdminHeader session={session} />
           <AdminContent>
-            <ManageContacts token={token} />
+            <ManageStaffs token={token} />
           </AdminContent>
           <AdminFooter />
         </div>
@@ -35,4 +33,4 @@ const AdminContactPage = async () => {
   );
 };
 
-export default AdminContactPage;
+export default AdminStaffsPage;

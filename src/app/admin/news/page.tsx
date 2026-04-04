@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 
 const getNewsData = async (token?: string) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts?limit=1`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts?limit=1000`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },
@@ -17,7 +17,7 @@ const getNewsData = async (token?: string) => {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return Array.isArray(json.data) ? json.data[0] : null;
+    return Array.isArray(json.data) ? json.data : [];
   } catch (error) {
     return null;
   }

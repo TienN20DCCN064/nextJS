@@ -4,7 +4,7 @@ import { useHasMounted } from "@/utils/customHook";
 import { Button, Form, Input, Modal, notification, Steps } from "antd";
 import { SmileOutlined, SolutionOutlined, UserOutlined } from '@ant-design/icons';
 import { useEffect, useState } from "react";
-import { sendRequest } from "@/utils/api";
+import { changePassword, retryPassword } from "@/hooks/apiHooks";
 
 const ModalChangePassword = (props: any) => {
     const { isModalOpen, setIsModalOpen } = props;
@@ -19,15 +19,9 @@ const ModalChangePassword = (props: any) => {
 
     const onFinishStep0 = async (values: any) => {
         const { email } = values;
-        const res = await sendRequest<IBackendRes<any>>({
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/retry-password`,
-            method: "POST",
-            body: {
-                email
-            }
-        })
+        const res = await retryPassword({ email });
 
-        if (res?.data) {
+        if (res) {
             setUserEmail(res?.data?.email)
             setCurrent(1);
         } else {
@@ -48,15 +42,9 @@ const ModalChangePassword = (props: any) => {
             })
             return;
         }
-        const res = await sendRequest<IBackendRes<any>>({
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/change-password`,
-            method: "POST",
-            body: {
-                code, password, confirmPassword, email: userEmail
-            }
-        })
+        const res = await changePassword({ code, password, confirmPassword, email: userEmail });
 
-        if (res?.data) {
+        if (res) {
             setCurrent(2);
         } else {
             notification.error({

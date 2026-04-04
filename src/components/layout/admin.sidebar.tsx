@@ -5,17 +5,41 @@ import {
     AppstoreOutlined,
     MailOutlined,
     TeamOutlined,
-
+    DashboardOutlined,
+    FileTextOutlined,
+    NotificationOutlined,
+    SolutionOutlined,
+    ApartmentOutlined,
 } from '@ant-design/icons';
 import React, { useContext } from 'react';
 import { AdminContext } from "@/library/admin.context";
 import type { MenuProps } from 'antd';
-import Link from 'next/link'
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 type MenuItem = Required<MenuProps>['items'][number];
+
 const AdminSideBar = () => {
     const { Sider } = Layout;
     const { collapseMenu } = useContext(AdminContext)!;
+    const pathname = usePathname();
+
+    // Map pathname → menu key
+    const getSelectedKey = (path: string): string => {
+        if (path === '/admin' || path === '/dashboard') return 'dashboard';
+        if (path.startsWith('/admin/about')) return 'about';
+        if (path.startsWith('/admin/news')) return 'news';
+        if (path.startsWith('/admin/announcements')) return 'announcements';
+        if (path.startsWith('/admin/procedures')) return 'procedures';
+        if (path.startsWith('/admin/departments')) return 'departments';
+        if (path.startsWith('/admin/staffs')) return 'staffs';
+        if (path.startsWith('/admin/pages')) return 'pages';
+        if (path.startsWith('/dashboard/user')) return 'users';
+        return 'dashboard';
+    };
+
+    const selectedKey = getSelectedKey(pathname);
+
     const items: MenuItem[] = [
         {
             key: 'grp',
@@ -24,8 +48,8 @@ const AdminSideBar = () => {
             children: [
                 {
                     key: "dashboard",
-                    label: <Link href={"/dashboard"}>Dashboard</Link>,
-                    icon: <AppstoreOutlined />,
+                    label: <Link href={"/admin"}>Dashboard</Link>,
+                    icon: <DashboardOutlined />,
                 },
                 {
                     key: "users",
@@ -35,49 +59,47 @@ const AdminSideBar = () => {
                 {
                     key: "about",
                     label: <Link href={"/admin/about"}>Quản lý Giới thiệu</Link>,
-                    icon: <AppstoreOutlined />,
+                    icon: <FileTextOutlined />,
                 },
                 {
                     key: "news",
                     label: <Link href={"/admin/news"}>Quản lý Tin tức</Link>,
-                    icon: <AppstoreOutlined />,
+                    icon: <NotificationOutlined />,
                 },
                 {
                     key: "announcements",
                     label: <Link href={"/admin/announcements"}>Quản lý Thông báo</Link>,
-                    icon: <AppstoreOutlined />,
-                },
-                {
-                    key: "documents",
-                    label: <Link href={"/admin/documents"}>Quản lý Văn bản</Link>,
-                    icon: <AppstoreOutlined />,
+                    icon: <MailOutlined />,
                 },
                 {
                     key: "procedures",
                     label: <Link href={"/admin/procedures"}>Quản lý Thủ tục</Link>,
-                    icon: <AppstoreOutlined />,
+                    icon: <SolutionOutlined />,
                 },
                 {
-                    key: "contact",
-                    label: <Link href={"/admin/contact"}>Quản lý Liên hệ</Link>,
-                    icon: <MailOutlined />,
+                    key: "departments",
+                    label: <Link href={"/admin/departments"}>Quản lý Phòng ban</Link>,
+                    icon: <ApartmentOutlined />,
+                },
+                {
+                    key: "staffs",
+                    label: <Link href={"/admin/staffs"}>Quản lý Nhân sự</Link>,
+                    icon: <TeamOutlined />,
                 },
             ],
         },
     ];
-    return (
-        <Sider
-            collapsed={collapseMenu}
-        >
 
+    return (
+        <Sider collapsed={collapseMenu}>
             <Menu
                 mode="inline"
-                defaultSelectedKeys={['dashboard']}
+                selectedKeys={[selectedKey]}
                 items={items}
                 style={{ height: '100vh' }}
             />
         </Sider>
-    )
-}
+    );
+};
 
 export default AdminSideBar;

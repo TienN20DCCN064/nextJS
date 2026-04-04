@@ -4,7 +4,7 @@ import { useHasMounted } from "@/utils/customHook";
 import { Button, Form, Input, Modal, notification, Steps } from "antd";
 import { SmileOutlined, SolutionOutlined, UserOutlined } from '@ant-design/icons';
 import { useEffect, useState } from "react";
-import { sendRequest } from "@/utils/api";
+import { checkCode, retryActive } from "@/hooks/apiHooks";
 
 const ModalReactive = (props: any) => {
     const { isModalOpen, setIsModalOpen, userEmail } = props;
@@ -25,16 +25,10 @@ const ModalReactive = (props: any) => {
 
     const onFinishStep0 = async (values: any) => {
         const { email } = values;
-        const res = await sendRequest<IBackendRes<any>>({
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/retry-active`,
-            method: "POST",
-            body: {
-                email
-            }
-        })
+        const res = await retryActive({ email });
 
-        if (res?.data) {
-            setUserId(res?.data?._id)
+        if (res) {
+            setUserId(res?.id)
             setCurrent(1);
         } else {
             notification.error({
@@ -47,15 +41,9 @@ const ModalReactive = (props: any) => {
 
     const onFinishStep1 = async (values: any) => {
         const { code } = values;
-        const res = await sendRequest<IBackendRes<any>>({
-            url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/check-code`,
-            method: "POST",
-            body: {
-                code, _id: userId
-            }
-        })
+        const res = await checkCode({ code, id: userId });
 
-        if (res?.data) {
+        if (res) {
             setCurrent(2);
         } else {
             notification.error({

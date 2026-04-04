@@ -4,11 +4,6 @@
   color: #222;
   font-size: 0.98rem;
   border-bottom: 1px solid #eee;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1200;
-  transition: top 0.3s;
 }
 .topbar-content {
   max-width: 1200px;

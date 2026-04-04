@@ -7,18 +7,19 @@ import { AdminContextProvider } from '@/library/admin.context';
 import ManageAbout from '@/components/admin/manage.about';
 import { redirect } from 'next/navigation';
 
-const getAboutData = async (token?: string) => {
+const getPagesData = async (token?: string) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pages/slug/about`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pages`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },
       next: { revalidate: 0 },
     });
-    if (!res.ok) return null;
-    return res.json();
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
   } catch (error) {
-    return null;
+    return [];
   }
 };
 
@@ -29,7 +30,7 @@ const AdminAboutPage = async () => {
   }
 
   const token = (session?.user as any)?.access_token;
-  const aboutData = await getAboutData(token);
+  const pagesData = await getPagesData(token);
 
   return (
     <AdminContextProvider>
@@ -40,7 +41,7 @@ const AdminAboutPage = async () => {
         <div className='right-side' style={{ flex: 1 }}>
           <AdminHeader session={session} />
           <AdminContent>
-            <ManageAbout initialData={aboutData} token={token} />
+            <ManageAbout initialData={pagesData} token={token} />
           </AdminContent>
           <AdminFooter />
         </div>

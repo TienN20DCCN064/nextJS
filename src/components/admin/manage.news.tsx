@@ -1,37 +1,61 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Form, Input, Button, Card, notification, Typography, Table, Popconfirm } from "antd";
-import { sendRequest } from "@/utils/api";
+import { Form, Input, Button, Card, notification, Typography, Table, Popconfirm, Modal, Switch, Select, DatePicker, Upload, Image } from "antd";
+import { createNews, deleteNews, fetchCategories, fetchNews, updateNews } from "@/hooks/apiHooks";
+import dayjs from "dayjs";
+import { EditTwoTone, DeleteTwoTone, UploadOutlined } from "@ant-design/icons";
+import { getBase64 } from "@/utils/helpers";
+
 
 const { TextArea } = Input;
 
 interface NewsData {
-  _id?: string;
+  id?: number;
   title: string;
   summary: string;
   content: string;
+  thumbnail?: string;
+  author?: string;
+  categoryId?: number;
+  isFeatured?: boolean;
   isPublished?: boolean;
+  publishedAt?: string | Date;
+}
+
+interface CategoryData {
+  id: number;
+  name: string;
 }
 
 interface ManageNewsProps {
   token: string | undefined;
+  initialData?: NewsData[] | null;
 }
 
-const ManageNews = ({ token }: ManageNewsProps) => {
+const ManageNews = ({ token, initialData }: ManageNewsProps) => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [newsList, setNewsList] = useState<NewsData[]>([]);
+  const [newsList, setNewsList] = useState<NewsData[]>(initialData || []);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
   const [editing, setEditing] = useState<NewsData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [previewImage, setPreviewImage] = useState<string>("");
+
+  const loadCategories = async () => {
+    try {
+      const data = await fetchCategories(token);
+      setCategories(data);
+    } catch {
+      console.error("Failed to load categories");
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await sendRequest<any>({
-        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts?type=news`,
-        method: "GET",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-      setNewsList(res.data || []);
+      const data = await fetchNews(token, statusFilter);
+      setNewsList(data);
     } catch {
       notification.error({ message: "Lỗi khi tải dữ liệu" });
     } finally {
@@ -39,40 +63,52 @@ const ManageNews = ({ token }: ManageNewsProps) => {
     }
   };
 
-  useEffect(() => { fetchData(); }, [token]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { 
+    if (!initialData || statusFilter !== 'all') {
+      fetchData(); 
+    }
+    loadCategories();
+  }, [token, statusFilter]);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditing(null);
+    setPreviewImage("");
+    form.resetFields();
+  };
+
+  const onFinishFailed = (errorInfo: any) => {
+    notification.error({
+      message: 'Vui lòng kiểm tra lại thông tin',
+      description: errorInfo.errorFields?.[0]?.errors?.[0],
+    });
+  };
 
   const submit = async (values: any) => {
     setLoading(true);
     try {
+      const generateSlug = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-");
       const payload = {
         title: values.title,
+        slug: generateSlug(values.title),
         summary: values.summary,
         content: values.content,
+        author: values.author,
+        thumbnail: values.thumbnail,
+        categoryId: values.categoryId,
+        isFeatured: values.isFeatured ?? false,
         isPublished: values.isPublished ?? true,
+        publishedAt: values.publishedAt ? values.publishedAt.toDate() : null,
         type: "news",
       };
-      let response;
-      if (editing?._id) {
-        response = await sendRequest<any>({
-          url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts/${editing._id}`,
-          method: "PATCH",
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-          body: payload,
-        });
+      if (editing?.id) {
+        await updateNews(editing.id, payload, token);
       } else {
-        response = await sendRequest<any>({
-          url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts`,
-          method: "POST",
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-          body: payload,
-        });
-      }
-      if ((response as any)?.statusCode && (response as any).statusCode >= 400) {
-        throw new Error((response as any).message || "Cập nhật thất bại");
+        await createNews(payload, token);
       }
       notification.success({ message: "Lưu tin tức thành công" });
-      setEditing(null);
-      form.resetFields();
+      handleCloseModal();
       fetchData();
     } catch (error: any) {
       notification.error({ message: "Lỗi", description: error?.message || "Cập nhật thất bại" });
@@ -84,11 +120,7 @@ const ManageNews = ({ token }: ManageNewsProps) => {
   const remove = async (id: string) => {
     setLoading(true);
     try {
-      await sendRequest<any>({
-        url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts/${id}`,
-        method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+      await deleteNews(id, token);
       notification.success({ message: "Xóa thành công" });
       fetchData();
     } catch {
@@ -100,38 +132,147 @@ const ManageNews = ({ token }: ManageNewsProps) => {
 
   return (
     <Card title="Quản lý Tin tức" style={{ minHeight: "calc(100vh - 240px)" }}>
-      <Typography.Paragraph>
-        Thêm/sửa/xóa các tin tức sẽ hiển thị tại /news.
-      </Typography.Paragraph>
-      <Form
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Typography.Paragraph style={{ margin: 0 }}>
+          Thêm/sửa/xóa các tin tức sẽ hiển thị tại /news.
+        </Typography.Paragraph>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            style={{ width: 150 }}
+            options={[
+              { value: 'all', label: 'Tất cả trạng thái' },
+              { value: 'published', label: 'Đang hiển thị' },
+              { value: 'draft', label: 'Bản nháp' },
+            ]}
+          />
+          <Button type="primary" onClick={() => { setEditing(null); form.resetFields(); setIsModalOpen(true); }}>
+            Thêm mới
+          </Button>
+        </div>
+      </div>
+      <Modal
+        title={editing ? "Chỉnh sửa Tin tức" : "Thêm mới Tin tức"}
+        open={isModalOpen}
+        onCancel={handleCloseModal}
+        footer={null}
+        width={700}
+        maskClosable={false}
+        destroyOnClose
+      >
+        <Form
         form={form}
         layout="vertical"
-        initialValues={editing || { title: "", summary: "", content: "", isPublished: true }}
+        initialValues={editing ? {
+          ...editing,
+          publishedAt: editing.publishedAt ? dayjs(editing.publishedAt) : null
+        } : { title: "", summary: "", content: "", thumbnail: "", categoryId: undefined, isFeatured: false, isPublished: true, publishedAt: null }}
         onFinish={submit}
-        key={editing?._id || "new"}
+        onFinishFailed={onFinishFailed}
+        key={editing?.id || "new"}
       >
-        <Form.Item label="Tiêu đề" name="title" rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}> <Input /> </Form.Item>
-        <Form.Item label="Tóm tắt" name="summary" rules={[{ required: true, message: "Vui lòng nhập tóm tắt" }]}> <Input /> </Form.Item>
-        <Form.Item label="Nội dung" name="content" rules={[{ required: true, message: "Vui lòng nhập nội dung" }]}> <TextArea rows={10} /> </Form.Item>
-        <Form.Item name="isPublished" valuePropName="checked" initialValue={true}>
-          <Button type="primary" htmlType="submit" loading={loading}>{editing ? "Cập nhật" : "Thêm mới"}</Button>
-          {editing && <Button style={{ marginLeft: 8 }} onClick={() => { setEditing(null); form.resetFields(); }}>Hủy</Button>}
+        <Form.Item label="Tiêu đề" name="title" rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label="Tóm tắt" name="summary" rules={[{ required: true, message: "Vui lòng nhập tóm tắt" }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="thumbnail" hidden>
+          <Input />
+        </Form.Item>
+        <Form.Item label="Ảnh đại diện (Upload)">
+          <Upload
+            maxCount={1}
+            beforeUpload={async (file) => {
+              const base64 = await getBase64(file);
+              form.setFieldValue('thumbnail', base64);
+              setPreviewImage(base64);
+              return false;
+            }}
+            onRemove={() => { form.setFieldValue('thumbnail', null); setPreviewImage(""); }}
+          >
+            <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+          </Upload>
+          {previewImage && (
+            <img src={previewImage} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 4, border: '1px solid #d9d9d9' }} />
+          )}
+        </Form.Item>
+        <Form.Item label="Tác giả" name="author">
+          <Input />
+        </Form.Item>
+        <Form.Item label="Nội dung" name="content" rules={[{ required: true, message: "Vui lòng nhập nội dung" }]}>
+          <TextArea rows={10} />
+        </Form.Item>
+        <Form.Item label="Danh mục" name="categoryId">
+          <Select 
+            options={categories.map(c => ({ value: c.id, label: c.name }))}
+            placeholder="Chọn danh mục"
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Ngày xuất bản" name="publishedAt">
+          <DatePicker showTime style={{ width: '100%' }} />
+        </Form.Item>
+        <Form.Item label="Nổi bật" name="isFeatured" valuePropName="checked">
+          <Switch />
+        </Form.Item>
+        <Form.Item label="Hiển thị" name="isPublished" valuePropName="checked">
+          <Switch />
+        </Form.Item>
+        <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
+          <Button onClick={handleCloseModal} style={{ marginRight: 8 }}>
+            Hủy
+          </Button>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            {editing ? "Cập nhật" : "Thêm mới"}
+          </Button>
         </Form.Item>
       </Form>
+      </Modal>
       <Table
         dataSource={newsList}
-        rowKey="_id"
+        rowKey="id"
         columns={[
+          {
+            title: "STT",
+            render: (_: any, record: any, index: any) => {
+              return <>{index + 1}</>;
+            },
+            width: 60,
+          },
           { title: "Tiêu đề", dataIndex: "title" },
-          { title: "Tóm tắt", dataIndex: "summary" },
-          { title: "Trạng thái", dataIndex: "isPublished", render: (v: boolean) => v ? "Hiển thị" : "Ẩn" },
+          {
+            title: "Ảnh",
+            dataIndex: "thumbnail",
+            width: 80,
+            render: (thumb: string) => thumb ? <Image src={thumb} width={40} height={40} style={{ objectFit: 'cover', borderRadius: 4 }} alt="thumbnail" /> : null,
+          },
+          { title: "Trạng thái", dataIndex: "isPublished", render: (v: boolean) => v ? "Hiển thị" : "Ẩn", width: 100 },
           {
             title: "Hành động",
+            width: 120,
             render: (_: any, record: NewsData) => (
-              <>
-                <Button size="small" onClick={() => { setEditing(record); form.setFieldsValue(record); }}>Sửa</Button>
-                <Popconfirm title="Xóa?" onConfirm={() => remove(record._id)}><Button size="small" danger style={{ marginLeft: 8 }}>Xóa</Button></Popconfirm>
-              </>
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <EditTwoTone
+                  twoToneColor="#f57800"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { 
+                    setEditing(record); 
+                    form.setFieldsValue({
+                      ...record,
+                      publishedAt: record.publishedAt ? dayjs(record.publishedAt) : null
+                    }); 
+                    setPreviewImage(record.thumbnail || "");
+                    setIsModalOpen(true); 
+                  }}
+                />
+                <Popconfirm title="Xóa?" onConfirm={() => remove(record.id as any)}>
+                  <span style={{ cursor: "pointer" }}>
+                    <DeleteTwoTone twoToneColor="#ff4d4f" />
+                  </span>
+                </Popconfirm>
+              </div>
             ),
           },
         ]}
