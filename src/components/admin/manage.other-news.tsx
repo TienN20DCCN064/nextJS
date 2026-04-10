@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Form, Input, Button, Card, notification, Typography, Table, Popconfirm, Modal, Switch, Select, DatePicker, Upload, Image, Row, Col } from "antd";
-import { createNews, deleteNews, fetchCategories, fetchNews, updateNews } from "@/hooks/apiHooks";
+import { createOtherNews, deleteNews, fetchCategories, fetchOtherNews, updateOtherNews } from "@/hooks/apiHooks";
 import dayjs from "dayjs";
 import { EditTwoTone, DeleteTwoTone, UploadOutlined } from "@ant-design/icons";
 import { getBase64 } from "@/utils/helpers";
-
 
 const { TextArea } = Input;
 
@@ -31,15 +30,14 @@ interface CategoryData {
   name: string;
 }
 
-interface ManageNewsProps {
+interface ManageOtherNewsProps {
   token: string | undefined;
-  initialData?: NewsData[] | null;
 }
 
-const ManageNews = ({ token, initialData }: ManageNewsProps) => {
+const ManageOtherNews = ({ token }: ManageOtherNewsProps) => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [newsList, setNewsList] = useState<NewsData[]>(initialData || []);
+  const [news, setNews] = useState<NewsData[]>([]);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [editing, setEditing] = useState<NewsData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,8 +56,8 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await fetchNews(token, statusFilter);
-      setNewsList(data);
+      const data = await fetchOtherNews(token, statusFilter);
+      setNews(data);
     } catch {
       notification.error({ message: "Lỗi khi tải dữ liệu" });
     } finally {
@@ -69,9 +67,7 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { 
-    if (!initialData || statusFilter !== 'all') {
-      fetchData(); 
-    }
+    fetchData(); 
     loadCategories();
   }, [token, statusFilter]);
 
@@ -107,14 +103,15 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
         isFeatured: isFeatured ?? false,
         isPublished: isPublished ?? true, 
         publishedAt: publishedAt ? publishedAt.toDate() : null,
-        type: "news" 
+        type: "other" 
       };
+
       if (editing?.id) {
-        await updateNews(editing.id, payload, token);
+        await updateOtherNews(editing.id, payload, token);
       } else {
-        await createNews(payload, token);
+        await createOtherNews(payload, token);
       }
-      notification.success({ message: "Lưu tin tức thành công" });
+      notification.success({ message: "Lưu thông tin thành công" });
       handleCloseModal();
       fetchData();
     } catch (error: any) {
@@ -138,10 +135,10 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
   };
 
   return (
-    <Card title="Quản lý Tin tức" style={{ minHeight: "calc(100vh - 240px)" }}>
+    <Card title="Quản lý Thông tin khác" style={{ minHeight: "calc(100vh - 240px)" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Typography.Paragraph style={{ margin: 0 }}>
-          Thêm/sửa/xóa các tin tức sẽ hiển thị tại /news.
+          Quản lý các thông tin bổ sung, tin tức loại khác (type="other").
         </Typography.Paragraph>
         <div style={{ display: 'flex', gap: 12 }}>
           <Select
@@ -160,121 +157,117 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
         </div>
       </div>
       <Modal
-        title={editing ? "Chỉnh sửa Tin tức" : "Thêm mới Tin tức"}
+        title={editing ? "Chỉnh sửa Thông tin" : "Thêm mới Thông tin"}
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={null}
-        width={700}
+        width={800}
         maskClosable={false}
         destroyOnClose
       >
         <Form
-        form={form}
-        layout="vertical"
-        initialValues={editing ? {
-          ...editing,
-          publishedAt: editing.publishedAt ? dayjs(editing.publishedAt) : null
-        } : { title: "", summary: "", content: "", thumbnail: "", categoryId: undefined, isFeatured: false, isPublished: true, publishedAt: null }}
-        onFinish={submit}
-        onFinishFailed={onFinishFailed}
-        key={editing?.id || "new"}
-      >
-        {editing && (
-          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
-            <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Thông tin hệ thống (Chỉ đọc)
-            </Typography.Text>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item label="ID" name="id">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Đường dẫn (Slug)" name="slug">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Loại" name="type">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="Ngày tạo" name="createdAt">
-                  <Input disabled value={editing.createdAt ? dayjs(editing.createdAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Cập nhật cuối" name="updatedAt">
-                  <Input disabled value={editing.updatedAt ? dayjs(editing.updatedAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-        )}
-        <Form.Item label="Tiêu đề" name="title" rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item label="Tóm tắt" name="summary" rules={[{ required: true, message: "Vui lòng nhập tóm tắt" }]}>
-          <TextArea rows={3} placeholder="Mô tả ngắn gọn về tin tức..." />
-        </Form.Item>
-        <Form.Item name="thumbnail" hidden>
-          <Input />
-        </Form.Item>
-        <Form.Item label="Ảnh đại diện (Upload)">
-          <Upload
-            maxCount={1}
-            beforeUpload={async (file) => {
-              const base64 = await getBase64(file);
-              form.setFieldValue('thumbnail', base64);
-              setPreviewImage(base64);
-              return false;
-            }}
-            onRemove={() => { form.setFieldValue('thumbnail', null); setPreviewImage(""); }}
-          >
-            <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
-          </Upload>
-          {previewImage && (
-            <img src={previewImage} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 4, border: '1px solid #d9d9d9' }} />
+          form={form}
+          layout="vertical"
+          onFinish={submit}
+          onFinishFailed={onFinishFailed}
+          key={editing?.id || "new"}
+        >
+          {editing && (
+            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
+              <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Thông tin hệ thống (Chỉ đọc)
+              </Typography.Text>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item label="ID" name="id">
+                    <Input disabled />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Đường dẫn (Slug)" name="slug">
+                    <Input disabled />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Loại" name="type">
+                    <Input disabled />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Ngày tạo" name="createdAt">
+                    <Input disabled value={editing.createdAt ? dayjs(editing.createdAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Cập nhật cuối" name="updatedAt">
+                    <Input disabled value={editing.updatedAt ? dayjs(editing.updatedAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
           )}
-        </Form.Item>
-        <Form.Item label="Tác giả" name="author">
-          <Input placeholder="Tên người viết bài..." />
-        </Form.Item>
-        <Form.Item label="Nội dung" name="content" rules={[{ required: true, message: "Vui lòng nhập nội dung" }]}>
-          <TextArea rows={10} />
-        </Form.Item>
-        <Form.Item label="Danh mục" name="categoryId">
-          <Select 
-            options={categories.map(c => ({ value: c.id, label: c.name }))}
-            placeholder="Chọn danh mục"
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Ngày xuất bản" name="publishedAt">
-          <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm:ss" />
-        </Form.Item>
-        <Form.Item label="Nổi bật" name="isFeatured" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item label="Hiển thị" name="isPublished" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
-          <Button onClick={handleCloseModal} style={{ marginRight: 8 }}>
-            Hủy
-          </Button>
-          <Button type="primary" htmlType="submit" loading={loading}>
-            {editing ? "Cập nhật" : "Thêm mới"}
-          </Button>
-        </Form.Item>
-      </Form>
+          <Form.Item label="Tiêu đề" name="title" rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Tóm tắt" name="summary" rules={[{ required: true, message: "Vui lòng nhập tóm tắt" }]}>
+            <TextArea rows={3} placeholder="Mô tả ngắn gọn về thông tin..." />
+          </Form.Item>
+          <Form.Item name="thumbnail" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Ảnh đại diện (Upload)">
+            <Upload
+              maxCount={1}
+              beforeUpload={async (file) => {
+                const base64 = await getBase64(file);
+                form.setFieldValue('thumbnail', base64);
+                setPreviewImage(base64);
+                return false;
+              }}
+              onRemove={() => { form.setFieldValue('thumbnail', null); setPreviewImage(""); }}
+            >
+              <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+            </Upload>
+            {previewImage && (
+              <img src={previewImage} alt="preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 4, border: '1px solid #d9d9d9' }} />
+            )}
+          </Form.Item>
+          <Form.Item label="Tác giả" name="author">
+            <Input placeholder="Tên đơn vị/người soạn thông tin..." />
+          </Form.Item>
+          <Form.Item label="Nội dung" name="content" rules={[{ required: true, message: "Vui lòng nhập nội dung" }]}>
+            <TextArea rows={10} />
+          </Form.Item>
+          <Form.Item label="Danh mục" name="categoryId">
+            <Select 
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+              placeholder="Chọn danh mục"
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="Ngày xuất bản" name="publishedAt">
+            <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm:ss" />
+          </Form.Item>
+          <Form.Item label="Nổi bật" name="isFeatured" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+          <Form.Item label="Hiển thị" name="isPublished" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+          <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
+            <Button onClick={handleCloseModal} style={{ marginRight: 8 }}>
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              {editing ? "Cập nhật" : "Thêm mới"}
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
       <Table
-        dataSource={newsList}
+        dataSource={news}
         rowKey="id"
         columns={[
           {
@@ -293,15 +286,21 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
           },
           { 
             title: "Tác giả", 
-            dataIndex: "author", 
+            dataIndex: "author",
             width: 120,
             render: (v) => v || '-'
           },
           { 
+            title: "Danh mục", 
+            dataIndex: "categoryId",
+            width: 120,
+            render: (catId: number) => categories.find(c => c.id === catId)?.name || 'Chưa phân loại'
+          },
+          { 
             title: "Ngày tạo", 
-            dataIndex: "createdAt", 
+            dataIndex: "createdAt",
             width: 150,
-            render: (v) => v ? dayjs(v).format('DD/MM/YYYY HH:mm') : '-'
+            render: (date: any) => date ? dayjs(date).format('DD/MM/YYYY HH:mm') : '-'
           },
           { title: "Trạng thái", dataIndex: "isPublished", render: (v: boolean) => v ? <Typography.Text type="success">Hiển thị</Typography.Text> : <Typography.Text type="secondary">Ẩn</Typography.Text>, width: 100 },
           {
@@ -338,4 +337,4 @@ const ManageNews = ({ token, initialData }: ManageNewsProps) => {
   );
 };
 
-export default ManageNews;
+export default ManageOtherNews;

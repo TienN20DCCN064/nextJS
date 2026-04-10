@@ -17,6 +17,8 @@ import {
 import { createStaff, deleteStaff, fetchDepartments, fetchStaffs, updateStaff } from "@/hooks/apiHooks";
 import { EditTwoTone, DeleteTwoTone, UploadOutlined } from "@ant-design/icons";
 import { getBase64 } from "@/utils/helpers";
+import { Row, Col } from "antd";
+import dayjs from "dayjs";
 
 interface StaffData {
   id?: number;
@@ -27,6 +29,8 @@ interface StaffData {
   image?: string;
   bio?: string;
   departmentId?: number;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 interface DepartmentData {
@@ -117,9 +121,15 @@ const ManageStaffs = ({ token }: ManageStaffsProps) => {
   const submit = async (values: any) => {
     setLoading(true);
     try {
+      const { name, position, phone, email, image, bio, departmentId } = values;
       const payload = {
-        ...values,
-        departmentId: values.departmentId || null,
+        name,
+        position,
+        phone,
+        email,
+        image,
+        bio,
+        departmentId: departmentId || null,
       };
       let response;
       if (editing?.id) {
@@ -201,6 +211,21 @@ const ManageStaffs = ({ token }: ManageStaffsProps) => {
           onFinishFailed={onFinishFailed}
           key={editing?.id || "new"}
         >
+          {editing && (
+            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
+              <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Thông tin hệ thống (Chỉ đọc)
+              </Typography.Text>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item label="ID" name="id">
+                    <Input disabled />
+                  </Form.Item>
+                </Col>
+              </Row>
+              
+            </div>
+          )}
           <Form.Item
             label="Họ tên"
             name="name"
@@ -289,16 +314,16 @@ const ManageStaffs = ({ token }: ManageStaffsProps) => {
             },
             width: 60,
           },
-          { title: "Họ tên", dataIndex: "name" },
+          { title: "Họ tên", dataIndex: "name", ellipsis: true },
           {
             title: "Ảnh",
             dataIndex: "image",
             width: 80,
             render: (img: string) => img ? <Image src={img} width={40} height={40} style={{ objectFit: 'cover', borderRadius: 4 }} alt="staff" /> : null,
           },
-          { title: "Chức vụ", dataIndex: "position" },
-          { title: "Phòng ban", dataIndex: "departmentId", render: (id: number) => departmentName(id) },
-          { title: "Email", dataIndex: "email" },
+          { title: "Chức vụ", dataIndex: "position", width: 150 },
+          { title: "Phòng ban", dataIndex: "departmentId", width: 150, render: (id: number) => departmentName(id) || '-' },
+          { title: "Email", dataIndex: "email", width: 180 },
           {
             title: "Hành động",
             width: 120,
@@ -307,7 +332,14 @@ const ManageStaffs = ({ token }: ManageStaffsProps) => {
                 <EditTwoTone
                   twoToneColor="#f57800"
                   style={{ cursor: "pointer" }}
-                  onClick={() => openModal(record)}
+                  onClick={() => {
+                    setEditing(record);
+                    form.setFieldsValue({
+                      ...record,
+                    });
+                    setPreviewImage(record.image || "");
+                    setIsModalOpen(true);
+                  }}
                 />
                 <Popconfirm
                   title="Xóa?"

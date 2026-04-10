@@ -7,22 +7,6 @@ import { AdminContextProvider } from '@/library/admin.context';
 import { redirect } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-const getAnnouncementsData = async (token?: string) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts?limit=1`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-      next: { revalidate: 0 },
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return Array.isArray(json.data) ? json.data[0] : null;
-  } catch (error) {
-    return null;
-  }
-};
-
 
 const ManageAnnouncements = dynamic(() => import('@/components/admin/manage.announcements'), { ssr: false });
 

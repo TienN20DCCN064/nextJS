@@ -1,10 +1,10 @@
 'use client';
-
 import { useEffect, useState, useCallback } from 'react';
-import { Form, Input, Button, Card, notification, Typography, Modal, Switch, Table, Popconfirm, Space, Upload } from 'antd';
+import { Form, Input, Button, Card, notification, Typography, Modal, Switch, Table, Popconfirm, Space, Upload, Row, Col } from 'antd';
 import { createPage, updatePage, deletePage, fetchPages } from '@/hooks/api/pages';
 import { EditTwoTone, DeleteTwoTone, UploadOutlined } from "@ant-design/icons";
 import { getBase64 } from "@/utils/helpers";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 
@@ -78,9 +78,14 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
   const submit = async (values: any) => {
     setLoading(true);
     try {
+      const { type, slug, title, content, image, isPublished } = values;
       const payload = {
-        ...values,
-        isPublished: values.isPublished ?? true,
+        type,
+        slug,
+        title,
+        content,
+        image,
+        isPublished: isPublished ?? true,
       };
 
       if (editingId) {
@@ -118,24 +123,39 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
       render: (_: any, __: any, index: number) => index + 1,
       width: 60,
     },
-    { title: "Tiêu đề", dataIndex: "title", key: "title" },
-    { title: "Slug", dataIndex: "slug", key: "slug" },
-    { title: "Loại", dataIndex: "type", key: "type" },
+    { title: "Tiêu đề", dataIndex: "title", key: "title", ellipsis: true },
+    { title: "Slug", dataIndex: "slug", key: "slug", width: 150 },
+    { title: "Loại", dataIndex: "type", key: "type", width: 100 },
+    { 
+      title: "Ngày tạo", 
+      dataIndex: "createdAt", 
+      width: 150,
+      render: (v: any) => v ? dayjs(v).format('DD/MM/YYYY HH:mm') : '-'
+    },
     { 
       title: "Trạng thái", 
       dataIndex: "isPublished", 
+      width: 100,
       render: (val: boolean) => val ? <Typography.Text type="success">Hiển thị</Typography.Text> : <Typography.Text type="secondary">Ẩn</Typography.Text>
     },
     {
       title: "Hành động",
       key: "action",
-      width: 150,
+      width: 120,
       render: (_: any, record: PageData) => (
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <EditTwoTone
             twoToneColor="#f57800"
             style={{ cursor: "pointer" }}
-            onClick={() => openModal(record)}
+            onClick={() => {
+                setEditingId(record.id || null);
+                setEditingData(record);
+                form.setFieldsValue({
+                    ...record,
+                });
+                setPreviewImage(record.image || "");
+                setIsModalOpen(true);
+            }}
           />
           <Popconfirm title="Xóa trang này?" onConfirm={() => remove(record.id)}>
             <span style={{ cursor: "pointer" }}>
@@ -182,6 +202,32 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
           key={editingId || "new"}
           initialValues={editingData || { type: 'general', slug: '', isPublished: true }}
         >
+          {editingId && (
+            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
+              <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Thông tin hệ thống (Chỉ đọc)
+              </Typography.Text>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item label="ID" name="id">
+                    <Input disabled />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item label="Ngày tạo" name="createdAt">
+                    <Input disabled value={editingData?.createdAt ? dayjs(editingData.createdAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Cập nhật cuối" name="updatedAt">
+                    <Input disabled value={editingData?.updatedAt ? dayjs(editingData.updatedAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <Form.Item label="Loại trang" name="type" rules={[{ required: true }]}>
               <Input placeholder="ví dụ: about, contact, policy" />

@@ -5,11 +5,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Row, Col, Card, Statistic, Table, Tag, Button, Space, Skeleton, Typography, Empty, Avatar } from 'antd';
-import { 
-  ArrowRightOutlined, 
-  ReadOutlined, 
-  NotificationOutlined, 
-  FileTextOutlined, 
+import {
+  ArrowRightOutlined,
+  ReadOutlined,
+  NotificationOutlined,
+  FileTextOutlined,
   UserOutlined,
   CalendarOutlined,
   GlobalOutlined,
@@ -50,10 +50,11 @@ const columns = [
 export default function Home() {
   const [aboutData, setAboutData] = useState<AboutData>({ title: '', content: '' });
   const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [otherPosts, setOtherPosts] = useState<any[]>([]);
   const [aboutError, setAboutError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isNewsLoading, setIsNewsLoading] = useState(true);
-  
+
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -93,7 +94,7 @@ export default function Home() {
         const res = await fetch(`${baseUrl}/api/v1/pages/slug/about?published=true`, { cache: 'no-store' });
         if (res.ok) {
           const json = await res.json();
-          const page = json.data || json; 
+          const page = json.data || json;
           if (page && page.title) {
             setAboutData({ title: page.title, content: page.content });
           }
@@ -116,6 +117,18 @@ export default function Home() {
         console.error('Fetch posts error:', err);
       } finally {
         setIsNewsLoading(false);
+      }
+
+      // Fetch Other Posts
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/posts?type=other&limit=5`, { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const items = json.data || json;
+          setOtherPosts(items);
+        }
+      } catch (err) {
+        console.error('Fetch other posts error:', err);
       }
 
       // Fetch Recent Announcements for Table
@@ -149,7 +162,7 @@ export default function Home() {
   const featuredPost = allPosts.find(p => p.isFeatured) || allPosts[0];
   const remainingPosts = allPosts.filter(p => p.id !== featuredPost?.id);
   const leftNews = remainingPosts; // Hiện tất cả bài viết còn lại
-  const rightNews = remainingPosts.slice(8, 16);
+  const rightNews = otherPosts;
   const announcementList = recentAnnouncements.slice(0, 6);
 
   const defaultImage = "https://vnanet.vn/Data/Images/logo.png";
@@ -172,10 +185,10 @@ export default function Home() {
                   {leftNews.map((item) => (
                     <div key={item.id || item._id} style={{ cursor: 'pointer', paddingBottom: 16, borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 12, alignItems: 'flex-start' }} onClick={() => handleOpenDetail(item)}>
                       <div style={{ width: 90, height: 60, flexShrink: 0, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                        <img 
-                          src={item.thumbnail || defaultImage} 
-                          alt={item.title} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        <img
+                          src={item.thumbnail || defaultImage}
+                          alt={item.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       </div>
                       <div style={{ flex: 1 }}>
@@ -183,14 +196,14 @@ export default function Home() {
                           {item.title}
                         </h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#64748b', fontSize: 11 }}>
-                           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                             <ClockCircleOutlined /> {dayjs(item.publishedAt).format('DD/MM/YYYY')}
-                           </span>
-                           {(typeof item.author === 'object' ? item.author?.name : item.author) && (
-                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                               <EyeOutlined /> {typeof item.author === 'object' ? item.author?.name : item.author}
-                             </span>
-                           )}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <ClockCircleOutlined /> {dayjs(item.publishedAt).format('DD/MM/YYYY')}
+                          </span>
+                          {(typeof item.author === 'object' ? item.author?.name : item.author) && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <EyeOutlined /> {typeof item.author === 'object' ? item.author?.name : item.author}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -261,7 +274,7 @@ export default function Home() {
                       </div>
                     </div>
                   )) : (
-                    [1,2,3,4].map(i => (
+                    [1, 2, 3, 4].map(i => (
                       <Skeleton key={i} active paragraph={{ rows: 1 }} title={{ width: '70%' }} />
                     ))
                   )}
@@ -276,24 +289,24 @@ export default function Home() {
       </section>
 
       <div className="max-w-7xl mx-auto px-6">
-        
+
         {/* Statistics Grid */}
         <Row gutter={[24, 24]} className="mb-20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           {[
-            { title: 'Tin tức', value: stats.news, icon: <ReadOutlined className="text-indigo-600"/>, suffix: '+', bg: 'bg-indigo-50/50', href: '/news' },
-            { title: 'Thông báo', value: stats.announcements, icon: <NotificationOutlined className="text-amber-500"/>, suffix: '', bg: 'bg-amber-50/50', href: '/announcements' },
-            { title: 'Thủ tục', value: stats.procedures, icon: <FileTextOutlined className="text-emerald-500"/>, suffix: '', bg: 'bg-emerald-50/50', href: '/procedures' },
-            { title: 'Nhân sự', value: stats.staffs, icon: <UserOutlined className="text-blue-500"/>, suffix: '', bg: 'bg-blue-50/50', href: '/contact' },
+            { title: 'Tin tức', value: stats.news, icon: <ReadOutlined className="text-indigo-600" />, suffix: '+', bg: 'bg-indigo-50/50', href: '/news' },
+            { title: 'Thông báo', value: stats.announcements, icon: <NotificationOutlined className="text-amber-500" />, suffix: '', bg: 'bg-amber-50/50', href: '/announcements' },
+            { title: 'Thủ tục', value: stats.procedures, icon: <FileTextOutlined className="text-emerald-500" />, suffix: '', bg: 'bg-emerald-50/50', href: '/procedures' },
+            { title: 'Nhân sự', value: stats.staffs, icon: <UserOutlined className="text-blue-500" />, suffix: '', bg: 'bg-blue-50/50', href: '/contact' },
           ].map((stat, i) => (
             <Col xs={24} sm={12} lg={6} key={i}>
               <Link href={stat.href} className="no-underline block h-full">
                 <Card className="premium-card text-center py-6 group hover:scale-[1.02] transition-all duration-500 cursor-pointer shadow-premium border-white rounded-2xl h-full">
                   <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center mx-auto mb-4 text-base group-hover:scale-110 transition-transform duration-500`}>
-                     {stat.icon}
+                    {stat.icon}
                   </div>
-                  <Statistic 
-                    title={<span className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] mb-1 block group-hover:text-primary transition-colors">{stat.title}</span>} 
-                    value={stat.value} 
+                  <Statistic
+                    title={<span className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] mb-1 block group-hover:text-primary transition-colors">{stat.title}</span>}
+                    value={stat.value}
                     suffix={stat.suffix}
                     valueStyle={{ fontWeight: 900, fontSize: '1.5rem', color: '#1e293b', letterSpacing: '-0.02em' }}
                   />
@@ -305,34 +318,40 @@ export default function Home() {
 
         {/* About Section */}
         <section className="mb-20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="section-title text-3xl m-0">Giới thiệu xã</h2>
-            <Link href="/about" className="text-primary font-bold hover:underline flex items-center gap-2 uppercase tracking-tighter text-sm">
-              Tìm hiểu thêm <ArrowRightOutlined size={14}/>
+          <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-3">
+            <h2 className="text-xl font-extrabold uppercase tracking-wider text-slate-800 m-0">
+              Giới thiệu xã
+            </h2>
+
+            <Link
+              href="/about"
+              className="text-primary font-semibold hover:underline flex items-center gap-2 uppercase text-xs whitespace-nowrap"
+            >
+              Tìm hiểu thêm <ArrowRightOutlined />
             </Link>
           </div>
-          
+
           <Card className="premium-card glass-panel" bodyStyle={{ padding: 0 }}>
             <div className="flex flex-col md:flex-row min-h-[300px]">
               <div className="flex-1 p-10 flex flex-col justify-center">
-                 {isLoading ? (
-                   <Skeleton active />
-                 ) : aboutData?.title ? (
-                    <>
-                      <h3 className="text-2xl font-black mb-6 text-slate-800 leading-tight">{aboutData.title}</h3>
-                      <p className="text-slate-600 leading-relaxed text-lg mb-0 font-medium italic relative">
-                         <span className="text-6xl text-slate-100 absolute -top-8 -left-4 font-serif pointer-events-none">“</span>
-                         {aboutData.content?.substring(0, 350)}...
-                      </p>
-                    </>
-                 ) : (
-                    <Empty description="Đang cập nhật giới thiệu..." />
-                 )}
+                {isLoading ? (
+                  <Skeleton active />
+                ) : aboutData?.title ? (
+                  <>
+                    <h3 className="text-2xl font-black mb-6 text-slate-800 leading-tight">{aboutData.title}</h3>
+                    <p className="text-slate-600 leading-relaxed text-lg mb-0 font-medium italic relative">
+                      <span className="text-6xl text-slate-100 absolute -top-8 -left-4 font-serif pointer-events-none">“</span>
+                      {aboutData.content?.substring(0, 350)}...
+                    </p>
+                  </>
+                ) : (
+                  <Empty description="Đang cập nhật giới thiệu..." />
+                )}
               </div>
               <div className="md:w-2/5 p-10 bg-slate-50/50 flex items-center justify-center border-l border-slate-100">
                 <div className="text-center group">
                   <div className="w-24 h-24 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
-                     <GlobalOutlined className="text-4xl text-blue-600" />
+                    <GlobalOutlined className="text-4xl text-blue-600" />
                   </div>
                   <div className="font-black text-slate-800 text-xl mb-1">Cổng thông tin</div>
                   <div className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Chính thức & Minh bạch</div>
@@ -344,54 +363,70 @@ export default function Home() {
 
         {/* Notification & Procedures Highlights */}
         <Row gutter={[40, 40]} className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-           <Col xs={24} lg={16}>
-              <h2 className="section-title text-3xl font-black uppercase tracking-tighter mb-8">Thông báo quan trọng</h2>
-              <Card className="premium-card shadow-premium overflow-hidden" bodyStyle={{ padding: 0 }}>
-                <Table 
-                  columns={columns} 
-                  dataSource={recentAnnouncements} 
-                  pagination={false} 
-                  className="premium-table"
-                  rowClassName="hover:bg-slate-50 transition-colors cursor-pointer group"
-                  onRow={(record) => ({
-                    onClick: () => handleOpenDetail(record),
-                  })}
-                />
-              </Card>
-           </Col>
-           <Col xs={24} lg={8}>
-              <h2 className="section-title text-3xl font-black uppercase tracking-tighter mb-8">Tin tức khác</h2>
-              <div className="flex flex-col gap-5">
-                  {rightNews.map((item) => (
-                    <div key={item.id} className="flex gap-4 group cursor-pointer pb-5 border-b border-slate-50 last:border-0" onClick={() => handleOpenDetail(item)}>
-                       <div className="w-[120px] h-[80px] rounded-sm overflow-hidden flex-shrink-0 bg-slate-50 border border-slate-100">
-                          <img 
-                            src={item.thumbnail || defaultImage} 
-                            alt={item.title} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                          />
-                       </div>
-                       <div className="flex flex-col justify-start flex-1">
-                          <h4 className="text-[15px] font-bold text-slate-800 leading-[1.35] group-hover:text-primary transition-colors line-clamp-3">
-                            {item.title}
-                          </h4>
-                          {(typeof item.author === 'object' ? item.author?.name : item.author) && (
-                            <div className="flex items-center gap-1.5 text-slate-400 text-[11px] mt-2">
-                               <EyeOutlined /> {typeof item.author === 'object' ? item.author?.name : item.author}
-                            </div>
-                          )}
-                       </div>
+          <Col xs={24} lg={16}>
+            <h2 className="section-title text-3xl font-black uppercase tracking-tighter mb-8">Thông báo quan trọng</h2>
+            <Card className="premium-card shadow-premium overflow-hidden" bodyStyle={{ padding: 0 }}>
+              <Table
+                columns={columns}
+                dataSource={recentAnnouncements}
+                pagination={false}
+                className="premium-table"
+                rowClassName="hover:bg-slate-50 transition-colors cursor-pointer group"
+                onRow={(record) => ({
+                  onClick: () => handleOpenDetail(record),
+                })}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} lg={8}>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold uppercase tracking-wide m-0 leading-tight">
+                Tin tức khác
+              </h2>
+
+              <Link
+                href="/news_other"
+                className="text-primary font-semibold hover:underline flex items-center gap-2 uppercase text-sm whitespace-nowrap ml-6"
+              >
+                Tất cả <ArrowRightOutlined />
+              </Link>
+            </div>
+            <div className="flex flex-col gap-5">
+              {rightNews.length > 0 ? rightNews.map((item) => (
+                <div key={item.id} className="flex gap-4 group cursor-pointer pb-5 border-b border-slate-50 last:border-0" onClick={() => handleOpenDetail(item)}>
+                  <div className="w-[120px] h-[80px] rounded-sm overflow-hidden flex-shrink-0 bg-slate-50 border border-slate-100">
+                    <img
+                      src={item.thumbnail || defaultImage}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-start flex-1">
+                    <h4 className="text-[15px] font-bold text-slate-800 leading-[1.35] group-hover:text-primary transition-colors line-clamp-3">
+                      {item.title}
+                    </h4>
+                    <div className="flex items-center gap-1.5 text-slate-400 text-[11px] mt-2">
+                      <ClockCircleOutlined /> {dayjs(item.publishedAt).format('DD/MM/YYYY')}
                     </div>
-                  ))}
-              </div>
-           </Col>
+                  </div>
+                </div>
+              )) : (
+                <Empty description="Đang cập nhật..." />
+              )}
+            </div>
+            <div className="mt-6">
+              <Button block type="dashed" href="/news_other" icon={<ArrowRightOutlined />}>
+                Xem tất cả tin tức khác
+              </Button>
+            </div>
+          </Col>
         </Row>
       </div>
 
-      <PostDetailModal 
-        post={selectedPost} 
-        open={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <PostDetailModal
+        post={selectedPost}
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </main>
   );

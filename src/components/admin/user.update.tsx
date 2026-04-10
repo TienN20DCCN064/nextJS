@@ -8,6 +8,8 @@ import {
 import { UploadOutlined } from '@ant-design/icons';
 import { getBase64 } from '@/utils/helpers';
 import { useEffect, useState } from 'react';
+import { Typography, Divider } from 'antd';
+import dayjs from 'dayjs';
 
 interface IProps {
     isUpdateModalOpen: boolean;
@@ -37,6 +39,12 @@ const UserUpdate = (props: IProps) => {
                 address: dataUpdate.address,
                 image: dataUpdate.image,
                 isActive: dataUpdate.isActive ?? true,
+                id: dataUpdate.id,
+                role: dataUpdate.role,
+                codeId: dataUpdate.codeId,
+                codeExpired: dataUpdate.codeExpired ? dayjs(dataUpdate.codeExpired).format('DD/MM/YYYY HH:mm:ss') : '',
+                createdAt: dataUpdate.createdAt ? dayjs(dataUpdate.createdAt).format('DD/MM/YYYY HH:mm:ss') : '',
+                updatedAt: dataUpdate.updatedAt ? dayjs(dataUpdate.updatedAt).format('DD/MM/YYYY HH:mm:ss') : '',
             })
             setPreviewImage(dataUpdate.image || "");
         }
@@ -83,6 +91,49 @@ const UserUpdate = (props: IProps) => {
                 layout="vertical"
                 form={form}
             >
+                {dataUpdate && (
+                    <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
+                        <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Thông tin hệ thống (Chỉ đọc)
+                        </Typography.Text>
+                        <Row gutter={16}>
+                            <Col span={8}>
+                                <Form.Item label="ID" name="id">
+                                    <Input disabled />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item label="Quyền (Role)" name="role">
+                                    <Input disabled />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item label="OTP Code" name="codeId">
+                                    <Input disabled />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={16}>
+                             <Col span={24}>
+                                <Form.Item label="OTP Hết hạn" name="codeExpired">
+                                    <Input disabled />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item label="Ngày tạo" name="createdAt">
+                                    <Input disabled />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item label="Cập nhật cuối" name="updatedAt">
+                                    <Input disabled />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </div>
+                )}
                 <Row gutter={[15, 15]}>
                     <Col span={24} md={12}>
                         <Form.Item

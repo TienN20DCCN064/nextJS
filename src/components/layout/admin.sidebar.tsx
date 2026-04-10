@@ -34,6 +34,7 @@ const AdminSideBar = () => {
         if (path.startsWith('/admin/departments')) return 'departments';
         if (path.startsWith('/admin/staffs')) return 'staffs';
         if (path.startsWith('/admin/pages')) return 'pages';
+        if (path.startsWith('/admin/other-news')) return 'other-news';
         if (path.startsWith('/dashboard/user')) return 'users';
         return 'dashboard';
     };
@@ -70,6 +71,11 @@ const AdminSideBar = () => {
                     key: "announcements",
                     label: <Link href={"/admin/announcements"}>Quản lý Thông báo</Link>,
                     icon: <MailOutlined />,
+                },
+                {
+                    key: "other-news",
+                    label: <Link href={"/admin/other-news"}>Quản lý Thông tin khác</Link>,
+                    icon: <AppstoreOutlined />,
                 },
                 {
                     key: "procedures",

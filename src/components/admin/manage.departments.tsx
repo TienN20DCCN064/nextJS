@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Form, Input, Button, Card, notification, Typography, Table, Popconfirm, Modal } from "antd";
 import { createDepartment, deleteDepartment, fetchDepartments, updateDepartment } from "@/hooks/apiHooks";
 import { EditTwoTone, DeleteTwoTone } from "@ant-design/icons";
+import { Row, Col } from "antd";
+import dayjs from "dayjs";
 
 interface DepartmentData {
   id?: number;
@@ -10,6 +12,8 @@ interface DepartmentData {
   description?: string;
   phone?: string;
   email?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 interface ManageDepartmentsProps {
@@ -69,10 +73,12 @@ const ManageDepartments = ({ token }: ManageDepartmentsProps) => {
   const submit = async (values: any) => {
     setLoading(true);
     try {
+      const { name, phone, email, description } = values;
+      const payload = { name, phone, email, description };
       if (editingId) {
-        await updateDepartment(editingId, values, token);
+        await updateDepartment(editingId, payload, token);
       } else {
-        await createDepartment(values, token);
+        await createDepartment(payload, token);
       }
       notification.success({ message: "Lưu phòng ban thành công" });
       handleCloseModal();
@@ -123,6 +129,21 @@ const ManageDepartments = ({ token }: ManageDepartmentsProps) => {
           key={editingId || "new"}
           initialValues={editingData || { name: "", description: "", phone: "", email: "" }}
         >
+          {editingId && (
+            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
+              <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Thông tin hệ thống (Chỉ đọc)
+              </Typography.Text>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item label="ID" name="id">
+                    <Input disabled />
+                  </Form.Item>
+                </Col>
+              </Row>
+              
+            </div>
+          )}
           <Form.Item label="Tên phòng ban" name="name" rules={[{ required: true, message: "Vui lòng nhập tên phòng ban" }]}> <Input /> </Form.Item>
           <Form.Item label="Số điện thoại" name="phone"> <Input /> </Form.Item>
           <Form.Item label="Email" name="email" rules={[{ type: 'email', message: 'Email không đúng định dạng' }]}> <Input /> </Form.Item>
@@ -144,9 +165,9 @@ const ManageDepartments = ({ token }: ManageDepartmentsProps) => {
             },
             width: 60,
           },
-          { title: "Tên phòng ban", dataIndex: "name" },
-          { title: "Số điện thoại", dataIndex: "phone" },
-          { title: "Email", dataIndex: "email" },
+          { title: "Tên phòng ban", dataIndex: "name", ellipsis: true },
+          { title: "Số điện thoại", dataIndex: "phone", width: 150 },
+          { title: "Email", dataIndex: "email", width: 220 },
           {
             title: "Hành động",
             width: 120,
@@ -155,7 +176,14 @@ const ManageDepartments = ({ token }: ManageDepartmentsProps) => {
                 <EditTwoTone
                   twoToneColor="#f57800"
                   style={{ cursor: "pointer" }}
-                  onClick={() => openModal(record)}
+                  onClick={() => {
+                    setEditingId(record.id || null);
+                    setEditingData(record);
+                    form.setFieldsValue({
+                      ...record,
+                    });
+                    setIsModalOpen(true);
+                  }}
                 />
                 <Popconfirm title="Xóa?" onConfirm={() => remove(record.id)}>
                   <span style={{ cursor: "pointer" }}>

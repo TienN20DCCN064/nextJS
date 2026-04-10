@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 
 const getNewsData = async (token?: string) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts?limit=1000`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts?type=news&limit=1000`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },

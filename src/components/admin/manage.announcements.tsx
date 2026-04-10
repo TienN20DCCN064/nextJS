@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Form, Input, Button, Card, notification, Typography, Table, Popconfirm, Modal, Switch, Select, DatePicker, Upload, Image } from "antd";
+import { Form, Input, Button, Card, notification, Typography, Table, Popconfirm, Modal, Switch, Select, DatePicker, Upload, Image, Row, Col } from "antd";
 import { createAnnouncement, deleteAnnouncement, fetchAnnouncements, updateAnnouncement, fetchCategories } from "@/hooks/apiHooks";
 import dayjs from "dayjs";
 import { EditTwoTone, DeleteTwoTone, UploadOutlined } from "@ant-design/icons";
@@ -9,6 +9,8 @@ import { getBase64 } from "@/utils/helpers";
 interface AnnouncementData {
   id?: number;
   title: string;
+  slug?: string;
+  type?: string;
   summary: string;
   content: string;
   thumbnail?: string;
@@ -16,6 +18,8 @@ interface AnnouncementData {
   isFeatured?: boolean;
   isPublished?: boolean;
   publishedAt?: string | Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 interface CategoryData {
@@ -82,17 +86,23 @@ const ManageAnnouncements = ({ token }: ManageAnnouncementsProps) => {
     setLoading(true);
     try {
       const generateSlug = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-");
+      
+      const { title, summary, content, author, thumbnail, categoryId, isFeatured, isPublished, publishedAt } = values;
+      
       const payload = { 
-        ...values, 
-        slug: generateSlug(values.title),
-        thumbnail: values.thumbnail,
-        categoryId: values.categoryId,
-        isFeatured: values.isFeatured ?? false,
-        isPublished: values.isPublished ?? true, 
-        publishedAt: values.publishedAt ? values.publishedAt.toDate() : null,
+        title,
+        summary,
+        content,
+        author,
+        thumbnail,
+        categoryId,
+        slug: generateSlug(title),
+        isFeatured: isFeatured ?? false,
+        isPublished: isPublished ?? true, 
+        publishedAt: publishedAt ? publishedAt.toDate() : null,
         type: "announcement" 
       };
-      let response;
+      
       if (editing?.id) {
         await updateAnnouncement(editing.id, payload, token);
       } else {
@@ -163,11 +173,47 @@ const ManageAnnouncements = ({ token }: ManageAnnouncementsProps) => {
         onFinishFailed={onFinishFailed}
         key={editing?.id || "new"}
       >
+        {editing && (
+          <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e8e8e8' }}>
+            <Typography.Text strong style={{ display: 'block', marginBottom: '12px', fontSize: '12px', color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Thông tin hệ thống (Chỉ đọc)
+            </Typography.Text>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item label="ID" name="id">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item label="Đường dẫn (Slug)" name="slug">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item label="Loại" name="type">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="Ngày tạo" name="createdAt">
+                  <Input disabled value={editing.createdAt ? dayjs(editing.createdAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Cập nhật cuối" name="updatedAt">
+                  <Input disabled value={editing.updatedAt ? dayjs(editing.updatedAt).format('DD/MM/YYYY HH:mm:ss') : ''} />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+        )}
         <Form.Item label="Tiêu đề" name="title" rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}>
           <Input />
         </Form.Item>
         <Form.Item label="Tóm tắt" name="summary" rules={[{ required: true, message: "Vui lòng nhập tóm tắt" }]}>
-          <Input />
+          <Input.TextArea rows={3} placeholder="Mô tả ngắn gọn về thông báo..." />
         </Form.Item>
         <Form.Item name="thumbnail" hidden>
           <Input />
@@ -190,10 +236,10 @@ const ManageAnnouncements = ({ token }: ManageAnnouncementsProps) => {
           )}
         </Form.Item>
         <Form.Item label="Tác giả" name="author">
-          <Input />
+          <Input placeholder="Tên đơn vị/người soạn thông báo..." />
         </Form.Item>
         <Form.Item label="Nội dung" name="content" rules={[{ required: true, message: "Vui lòng nhập nội dung" }]}>
-          <Input.TextArea rows={6} />
+          <Input.TextArea rows={10} />
         </Form.Item>
         <Form.Item label="Danh mục" name="categoryId">
           <Select 
@@ -203,7 +249,7 @@ const ManageAnnouncements = ({ token }: ManageAnnouncementsProps) => {
           />
         </Form.Item>
         <Form.Item label="Ngày xuất bản" name="publishedAt">
-          <DatePicker showTime style={{ width: '100%' }} />
+          <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm:ss" />
         </Form.Item>
         <Form.Item label="Nổi bật" name="isFeatured" valuePropName="checked">
           <Switch />
@@ -232,14 +278,32 @@ const ManageAnnouncements = ({ token }: ManageAnnouncementsProps) => {
             },
             width: 60,
           },
-          { title: "Tiêu đề", dataIndex: "title" },
+          { title: "Tiêu đề", dataIndex: "title", ellipsis: true },
           {
             title: "Ảnh",
             dataIndex: "thumbnail",
             width: 80,
             render: (thumb: string) => thumb ? <Image src={thumb} width={40} height={40} style={{ objectFit: 'cover', borderRadius: 4 }} alt="thumbnail" /> : null,
           },
-          { title: "Trạng thái", dataIndex: "isPublished", render: (v: boolean) => v ? "Hiển thị" : "Ẩn", width: 100 },
+          { 
+            title: "Tác giả", 
+            dataIndex: "author",
+            width: 120,
+            render: (v) => v || '-'
+          },
+          { 
+            title: "Danh mục", 
+            dataIndex: "categoryId",
+            width: 120,
+            render: (catId: number) => categories.find(c => c.id === catId)?.name || 'Chưa phân loại'
+          },
+          { 
+            title: "Ngày tạo", 
+            dataIndex: "createdAt",
+            width: 150,
+            render: (date: any) => date ? dayjs(date).format('DD/MM/YYYY HH:mm') : '-'
+          },
+          { title: "Trạng thái", dataIndex: "isPublished", render: (v: boolean) => v ? <Typography.Text type="success">Hiển thị</Typography.Text> : <Typography.Text type="secondary">Ẩn</Typography.Text>, width: 100 },
           {
             title: "Hành động",
             width: 120,
@@ -252,7 +316,7 @@ const ManageAnnouncements = ({ token }: ManageAnnouncementsProps) => {
                     setEditing(record); 
                     form.setFieldsValue({
                       ...record,
-                      publishedAt: record.publishedAt ? dayjs(record.publishedAt) : null
+                      publishedAt: record.publishedAt ? dayjs(record.publishedAt) : null,
                     }); 
                     setPreviewImage(record.thumbnail || "");
                     setIsModalOpen(true); 

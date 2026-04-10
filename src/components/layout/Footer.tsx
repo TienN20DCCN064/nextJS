@@ -108,7 +108,7 @@ export default function Footer() {
           © {new Date().getFullYear()} {info.name}. Toàn bộ bản quyền được bảo lưu.
         </div>
         <div className="flex items-center gap-6 text-[8px] font-black uppercase tracking-[0.18em] text-slate-600 italic">
-           <span>Xây dựng & Phát triển bởi Antigravity Team</span>
+           <span>Xây dựng & Phát triển bởi nhân viên xã</span>
         </div>
       </div>
     </footer>

@@ -50,12 +50,31 @@ export const updateAnnouncement = async (
 export const deleteAnnouncement = async (id: string | number, token?: string) =>
   unwrapData(await api.posts.remove(id, authHeaders(token)));
 
+export const fetchOtherNews = async (token?: string, status?: string) =>
+  unwrapList(
+    await api.posts.list({ type: "other", status }, authHeaders(token)),
+  );
+
+export const createOtherNews = async (payload: any, token?: string) =>
+  unwrapData(
+    await api.posts.create({ ...payload, type: "other" }, authHeaders(token)),
+  );
+
+export const updateOtherNews = async (
+  id: string | number,
+  payload: any,
+  token?: string,
+) =>
+  unwrapData(
+    await api.posts.update(id, { ...payload, type: "other" }, authHeaders(token)),
+  );
+
 export const fetchLatestNews = async (token?: string) => {
-  const items = await api.posts.list({ limit: 1 }, authHeaders(token));
+  const items = await api.posts.list({ type: "news", limit: 1 }, authHeaders(token));
   return unwrapList(items)[0] ?? null;
 };
 
 export const fetchLatestAnnouncements = async (token?: string) => {
-  const items = await api.posts.list({ limit: 1 }, authHeaders(token));
+  const items = await api.posts.list({ type: "announcement", limit: 1 }, authHeaders(token));
   return unwrapList(items)[0] ?? null;
 };
