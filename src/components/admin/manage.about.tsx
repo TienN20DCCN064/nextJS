@@ -1,12 +1,24 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { Form, Input, Button, Card, notification, Typography, Modal, Switch, Table, Popconfirm, Space, Upload, Row, Col } from 'antd';
+import { Form, Input, Button, Card, notification, Typography, Modal, Switch, Table, Popconfirm, Space, Upload, Row, Col, Tabs } from 'antd';
 import { createPage, updatePage, deletePage, fetchPages } from '@/hooks/api/pages';
-import { EditTwoTone, DeleteTwoTone, UploadOutlined } from "@ant-design/icons";
+import { EditTwoTone, DeleteTwoTone, UploadOutlined, PlusOutlined } from "@ant-design/icons";
 import { getBase64 } from "@/utils/helpers";
 import dayjs from "dayjs";
 
 const { TextArea } = Input;
+
+const SYSTEM_TYPES = [
+  { type: 'location', title: 'Vị trí bản đồ (Location)', slug: 'location' },
+  { type: 'contact', title: 'Thông tin Liên hệ', slug: 'contact' },
+  { type: 'about', title: 'Bài Giới thiệu chung', slug: 'about' },
+  { type: 'phone', title: 'Số điện thoại', slug: 'phone' },
+  { type: 'email', title: 'Email liên hệ', slug: 'email' },
+  { type: 'name', title: 'Tên hệ thống / cơ quan', slug: 'name' },
+  { type: 'logo', title: 'Logo hiển thị', slug: 'logo' },
+  { type: 'agency', title: 'Cơ quan chủ quản', slug: 'agency' },
+  { type: 'address', title: 'Địa chỉ trụ sở', slug: 'address' },
+];
 
 interface PageData {
   id?: number;
@@ -18,6 +30,8 @@ interface PageData {
   isPublished?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  isSystemMissing?: boolean;
+  isSystem?: boolean;
 }
 
 interface ManageAboutProps {
@@ -32,6 +46,8 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingData, setEditingData] = useState<PageData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSystemModal, setIsSystemModal] = useState(false);
+  const [filterType, setFilterType] = useState('all');
   const [previewImage, setPreviewImage] = useState<string>("");
 
   const fetchData = useCallback(async () => {
@@ -46,10 +62,21 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
     }
   }, [token]);
 
-  const openModal = (record?: PageData) => {
+  const openModal = (record?: PageData, isSystem = false) => {
+    setIsSystemModal(isSystem);
     if (record) {
       setEditingId(record.id || null);
       setEditingData(record);
+      if (!record.id) {
+          form.setFieldsValue({
+              type: record.type,
+              slug: record.slug,
+              title: record.title,
+              isPublished: true,
+          });
+      } else {
+          form.setFieldsValue({ ...record });
+      }
       setPreviewImage(record.image || "");
     } else {
       setEditingId(null);
@@ -117,6 +144,30 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
     }
   };
 
+  const systemItems = SYSTEM_TYPES.map(sys => {
+    const existing = pages.find(p => p.type === sys.type);
+    if (existing) return { ...existing, isSystem: true };
+    return { 
+      title: sys.title, 
+      type: sys.type, 
+      slug: sys.slug, 
+      content: '', 
+      isSystemMissing: true, 
+      isSystem: true 
+    };
+  });
+
+  const otherItems = pages.filter(p => !SYSTEM_TYPES.some(s => s.type === p.type));
+
+  let tableData: PageData[] = [];
+  if (filterType === 'all') {
+    tableData = [...systemItems, ...otherItems];
+  } else if (filterType === 'required') {
+    tableData = systemItems;
+  } else {
+    tableData = otherItems;
+  }
+
   const columns = [
     {
       title: "STT",
@@ -142,28 +193,31 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
       title: "Hành động",
       key: "action",
       width: 120,
-      render: (_: any, record: PageData) => (
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <EditTwoTone
-            twoToneColor="#f57800"
-            style={{ cursor: "pointer" }}
-            onClick={() => {
-                setEditingId(record.id || null);
-                setEditingData(record);
-                form.setFieldsValue({
-                    ...record,
-                });
-                setPreviewImage(record.image || "");
-                setIsModalOpen(true);
-            }}
-          />
-          <Popconfirm title="Xóa trang này?" onConfirm={() => remove(record.id)}>
-            <span style={{ cursor: "pointer" }}>
-              <DeleteTwoTone twoToneColor="#ff4d4f" />
-            </span>
-          </Popconfirm>
-        </div>
-      ),
+      render: (_: any, record: PageData) => {
+        if (record.isSystemMissing) {
+          return (
+            <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => openModal(record, true)}>
+              Thêm
+            </Button>
+          );
+        }
+        return (
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <EditTwoTone
+              twoToneColor="#f57800"
+              style={{ cursor: "pointer" }}
+              onClick={() => openModal({ ...record, isSystem: record.isSystem }, record.isSystem)}
+            />
+            {!record.isSystem && (
+              <Popconfirm title="Xóa trang này?" onConfirm={() => remove(record.id)}>
+                <span style={{ cursor: "pointer" }}>
+                  <DeleteTwoTone twoToneColor="#ff4d4f" />
+                </span>
+              </Popconfirm>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -171,18 +225,36 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
     <Card title="Quản lý Các Trang Nội dung" style={{ minHeight: 'calc(100vh - 240px)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Typography.Paragraph style={{ margin: 0 }}>
-          Quản lý toàn bộ thông tin trong bảng pages (Giới thiệu, Liên hệ, Chính sách...).
+          Quản lý toàn bộ thông tin hệ thống. Bạn có thể thiết lập các thông tin bắt buộc hoặc thêm các thông tin mở rộng khác.
         </Typography.Paragraph>
-        <Button type="primary" onClick={() => openModal()}>
-          Thêm trang mới
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(undefined, false)}>
+          Thêm thông tin khác
         </Button>
       </div>
 
-      <Table 
-        dataSource={pages} 
+      <Tabs 
+        activeKey={filterType} 
+        onChange={setFilterType} 
+        items={[
+          { key: 'all', label: 'Tất cả', children: null },
+          { key: 'required', label: 'Thông tin hệ thống', children: null },
+          { key: 'other', label: 'Thông tin khác', children: null }
+        ]} 
+        style={{ marginBottom: 16 }}
+      />
+
+      <Table
+        scroll={{ y: "calc(100vh - 400px)", x: "max-content" }} 
+        dataSource={tableData} 
         columns={columns} 
-        rowKey="id" 
+        rowKey={(record) => record.id ? record.id.toString() : record.type!} 
         loading={loading}
+        pagination={{
+            showSizeChanger: true,
+            pageSizeOptions: ['5', '10', '20', '50', '100'],
+            defaultPageSize: 10,
+            showTotal: (total, range) => `${range[0]}-${range[1]} trong tổng số ${total} mục`,
+        }}
       />
 
       <Modal
@@ -230,10 +302,10 @@ const ManageAbout = ({ initialData, token }: ManageAboutProps) => {
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <Form.Item label="Loại trang" name="type" rules={[{ required: true }]}>
-              <Input placeholder="ví dụ: about, contact, policy" />
+              <Input placeholder="ví dụ: about, contact, policy" disabled={isSystemModal} />
             </Form.Item>
             <Form.Item label="Đường dẫn (Slug)" name="slug" rules={[{ required: true }]}>
-              <Input placeholder="ví dụ: gioi-thieu" />
+              <Input placeholder="ví dụ: gioi-thieu" disabled={isSystemModal} />
             </Form.Item>
           </div>
 

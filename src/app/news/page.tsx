@@ -37,7 +37,7 @@ const fetchNews = async () => {
 
 function NewsSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20">
+    <div className="max-w-[1440px] mx-auto px-10 lg:px-20 py-20">
       <Skeleton active title={{ width: 300 }} paragraph={{ rows: 1 }} />
       <Row gutter={[24, 24]} className="mt-10">
         {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -88,7 +88,7 @@ export default function NewsPage() {
     <main className="bg-slate-50 min-h-screen pb-24">
       {/* HEADER */}
       <section className="bg-white border-b py-16 mb-10">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-[1440px] mx-auto px-10 lg:px-20">
           <Link
             href="/"
             className="text-slate-400 hover:text-primary flex items-center gap-2 mb-4 text-xs font-bold uppercase"
@@ -120,7 +120,7 @@ export default function NewsPage() {
       </section>
 
       {/* LIST */}
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-[1440px] mx-auto px-10 lg:px-20">
         {filteredItems.length > 0 ? (
           <Row gutter={[24, 24]}>
             {filteredItems.map((item, index) => (

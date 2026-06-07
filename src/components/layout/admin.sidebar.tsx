@@ -44,7 +44,7 @@ const AdminSideBar = () => {
     const items: MenuItem[] = [
         {
             key: 'grp',
-            label: 'Quản trị',
+            label: <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '1px' }}>Quản lý</span>,
             type: 'group',
             children: [
                 {
@@ -97,13 +97,25 @@ const AdminSideBar = () => {
     ];
 
     return (
-        <Sider collapsed={collapseMenu}>
-            <Menu
-                mode="inline"
-                selectedKeys={[selectedKey]}
-                items={items}
-                style={{ height: '100vh' }}
-            />
+        <Sider collapsed={collapseMenu} width={260}>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'linear-gradient(180deg, #001f4d 0%, #004080 100%)' }}>
+                <Menu
+                    theme="dark"
+                    mode="inline"
+                    selectedKeys={[selectedKey]}
+                    items={items}
+                    style={{ 
+                        flex: 1,
+                        background: 'transparent',
+                        borderRight: 'none',
+                    }}
+                />
+                {!collapseMenu && (
+                    <div style={{ padding: '16px 10px', textAlign: 'center', color: '#a6c1e1', fontSize: '11px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        Hệ thống Quản lý Hành chính<br/>UBND Xã ©{new Date().getFullYear()}
+                    </div>
+                )}
+            </div>
         </Sider>
     );
 };

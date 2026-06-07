@@ -111,6 +111,7 @@ const UserTable = (props: IProps) => {
         <Button onClick={() => setIsCreateModalOpen(true)}>Create User</Button>
       </div>
       <Table
+        scroll={{ y: "calc(100vh - 400px)", x: "max-content" }}
         bordered
         dataSource={users}
         columns={columns}

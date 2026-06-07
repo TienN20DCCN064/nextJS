@@ -37,11 +37,15 @@ const AdminHeader = (props: any) => {
         <>
             <Header
                 style={{
-                    padding: 0,
+                    padding: '0 24px',
                     display: "flex",
-                    background: "#f5f5f5",
+                    background: "#ffffff",
+                    boxShadow: "0 2px 8px rgba(0, 102, 255, 0.1)",
+                    borderBottom: "1px solid #e6f0ff",
                     justifyContent: "space-between",
-                    alignItems: "center"
+                    alignItems: "center",
+                    position: "relative",
+                    zIndex: 10,
                 }} >
 
                 <Button
@@ -54,16 +58,12 @@ const AdminHeader = (props: any) => {
                         height: 64,
                     }}
                 />
-                <Dropdown menu={{ items }} >
-                    <a onClick={(e) => e.preventDefault()}
-                        style={{ color: "unset", lineHeight: "0 !important", marginRight: 20 }}
-                    >
-                        <Space>
-                            Welcome {session?.user?.email ?? ""}
-                            <DownOutlined />
-                        </Space>
-                    </a>
-                </Dropdown>
+                <Space style={{ marginRight: 20 }}>
+                    <span style={{ color: '#004080', fontWeight: 500 }}>Welcome <strong style={{ color: '#0066ff' }}>{session?.user?.email ?? ""}</strong></span>
+                    <Button type="primary" danger onClick={() => signOut()} style={{ marginLeft: 10, borderRadius: 6, fontWeight: 600 }}>
+                        Đăng xuất
+                    </Button>
+                </Space>
             </Header>
         </>
     )

@@ -60,7 +60,7 @@ type StaffData = {
 
 function ContactSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20">
+    <div className="max-w-[1440px] mx-auto px-10 lg:px-20 py-20">
       <Skeleton active title={{ width: 400 }} paragraph={{ rows: 2 }} className="mb-12" />
       <Row gutter={[40, 48]}>
         <Col xs={24} lg={16}>
@@ -179,7 +179,7 @@ export default function ContactPage() {
     <main className="bg-slate-50 min-h-screen pb-24">
       {/* Premium Header */}
       <section className="bg-white border-b border-slate-100 py-20 mb-12 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center md:text-left">
+        <div className="max-w-[1440px] mx-auto px-10 lg:px-20 relative z-10 text-center md:text-left">
           <Link href="/" className="text-slate-400 no-underline hover:text-primary transition-colors font-bold flex items-center gap-2 mb-6 uppercase tracking-widest text-[11px] animate-fade-in-up">
              <HomeOutlined /> Trang chủ / Liên hệ
           </Link>
@@ -194,7 +194,7 @@ export default function ContactPage() {
         <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-[1440px] mx-auto px-10 lg:px-20">
         <Row gutter={[24, 24]}>
           {/* Map Section */}
           <Col xs={24} lg={16}>

@@ -38,7 +38,7 @@ const fetchOtherNews = async () => {
 
 function NewsSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20">
+    <div className="max-w-[1440px] mx-auto px-10 lg:px-20 py-20">
       <Skeleton active title={{ width: 300 }} paragraph={{ rows: 1 }} />
       <Row gutter={[24, 24]} className="mt-10">
         {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -89,7 +89,7 @@ export default function OtherNewsPage() {
     <main className="bg-[#f8fafc] min-h-screen pb-24">
       {/* HEADER SECTION */}
       <section className="bg-white border-b border-slate-100 pt-16 pb-12 mb-10">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-[1440px] mx-auto px-10 lg:px-20">
           <nav className="flex items-center gap-2 mb-6">
             <Link href="/" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
               <HomeOutlined /> Trang chủ
@@ -131,7 +131,7 @@ export default function OtherNewsPage() {
       </section>
 
       {/* CONTENT GRID */}
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-[1440px] mx-auto px-10 lg:px-20">
         {filteredItems.length > 0 ? (
           <Row gutter={[32, 40]}>
             {filteredItems.map((item) => (

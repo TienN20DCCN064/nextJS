@@ -10,13 +10,14 @@ const AdminContent = ({
     const { Content } = Layout;
 
     return (
-        <Content>
+        <Content style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div
                 style={{
                     padding: 24,
-                    minHeight: 'calc(100vh - 180px)',
-                    // background: "#ccc",
-                    // borderRadius: "#ccc",
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: "#f0f5ff",
                 }}
             >
                 {children}

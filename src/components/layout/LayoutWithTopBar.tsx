@@ -3,11 +3,14 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import TopBar from "@/components/layout/TopBar";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function LayoutWithTopBar({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const [showTopBar, setShowTopBar] = useState(true);
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,13 +22,12 @@ export default function LayoutWithTopBar({
 
   return (
     <>
-      {/* z-index: 100 → dưới Ant Design Modal (z-index 1000) 
-          nên popup/modal sẽ hiện trên header đúng cách */}
       <header style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", flexDirection: "column" }}>
-        {/* Dùng CSS transition max-height thay vì mount/unmount để tránh giật */}
-        <div className={showTopBar ? "topbar-wrapper topbar-visible" : "topbar-wrapper topbar-hidden"}>
-          <TopBar />
-        </div>
+        {!isAdminPage && (
+          <div className={showTopBar ? "topbar-wrapper topbar-visible" : "topbar-wrapper topbar-hidden"}>
+            <TopBar />
+          </div>
+        )}
         <Navbar />
       </header>
       <main id="app-content-wrapper" style={{ minHeight: "80vh" }}>

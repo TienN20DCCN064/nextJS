@@ -74,7 +74,7 @@ export default function AboutPage() {
   return (
     <main className="bg-slate-50 min-h-screen pb-24">
       <section className="bg-white border-b border-slate-100 py-20 mb-12 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+        <div className="max-w-[1440px] mx-auto px-10 lg:px-20 relative z-10 text-center">
           <h1 className="text-4xl font-black text-slate-900 mb-6 tracking-tight animate-fade-in-up">Giới thiệu & Thông tin</h1>
           <Paragraph className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed animate-fade-in-up">
             Tổng hợp các trang thông tin chính thức về lịch sử, truyền thống và các hoạt động phát triển của địa phương.
@@ -83,7 +83,7 @@ export default function AboutPage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-[1440px] mx-auto px-10 lg:px-20">
 
         {pages.length === 0 ? (
           <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>

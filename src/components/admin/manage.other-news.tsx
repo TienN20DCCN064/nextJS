@@ -267,6 +267,13 @@ const ManageOtherNews = ({ token }: ManageOtherNewsProps) => {
         </Form>
       </Modal>
       <Table
+        scroll={{ y: "calc(100vh - 400px)", x: "max-content" }}
+        pagination={{
+          showSizeChanger: true,
+          pageSizeOptions: ["5", "10", "20", "50", "100"],
+          defaultPageSize: 10,
+          showTotal: (total, range) => `${range[0]}-${range[1]} trong tổng số ${total} mục`,
+        }}
         dataSource={news}
         rowKey="id"
         columns={[
